@@ -1,5 +1,5 @@
 import validator from "validator"
-
+import userModel from "../models/userModel.js";
 const signup = async (req, res) => {
 
     try {
