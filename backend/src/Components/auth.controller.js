@@ -4,6 +4,8 @@ import generateToken from "../lib/utils.js";
 import bcrypt from "bcrypt"
 import sendWelcomeEmail from "../emails/emailHandler.js";
 import "dotenv/config"
+import mongoose from "mongoose";
+
 const signup = async (req, res) => {
 
     try {
@@ -56,4 +58,49 @@ const signup = async (req, res) => {
     }
 }
 
-export default signup;
+const login = async (req, res) => {
+
+    try {
+        const { email, password } = req.body
+
+        if (!email || !password) {
+            return res.status(400).json({ message: "All Fields are required" })
+        }
+
+        if (!validator.isEmail(email)) {
+            return res.status(400).json({ message: "Please Enter a valid email" })
+        }
+
+
+        const user = await userModel.findOne({ email })
+        if (!user) {
+            return res.status(400).json({ message: "email does not exist" })
+        }
+
+        const isPasswordCorrect = await bcrypt.compare(password, user.password)
+
+        if (!isPasswordCorrect) {
+            return res.status(400).json({ message: "Please enter a correct Password" })
+        }
+
+        generateToken(user._id, res);
+
+        res.status(201).json({
+            _id: user._id,
+            fullName: user.fullName,
+            email: user.email,
+            profilePic: user.profilePic
+        })
+    } catch (error) {
+        console.log("Error in login Controller")
+        res.status(500).json({ message: "Internal Server Error" })
+    }
+
+};
+
+const logout = (_, res) => {
+    res.cookie("jwt", "", { maxAge: 0 })
+    res.status(200).json({ message: "Logged Out Successfully" })
+};
+
+export { signup, login, logout };
