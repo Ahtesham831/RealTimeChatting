@@ -2,6 +2,8 @@ import validator from "validator"
 import userModel from "../models/userModel.js";
 import generateToken from "../lib/utils.js";
 import bcrypt from "bcrypt"
+import sendWelcomeEmail from "../emails/emailHandler.js";
+import "dotenv/config"
 const signup = async (req, res) => {
 
     try {
@@ -41,6 +43,12 @@ const signup = async (req, res) => {
             email: newUser.email,
             profilePic: newUser.profilePic
         })
+
+        try {
+            await sendWelcomeEmail(email, fullName, process.env.CLIENT_URL)
+        } catch (error) {
+            res.status(400).json({ message: "Invalid User Data" })
+        }
 
     } catch (error) {
         console.log("Error is generated in signup", error);
